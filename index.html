@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stokker — Email Blocks Wireframe Spec</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;500;600&family=Titillium+Web:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #1a1a1a; --paper: #f4f6f8; --rule: #d0d8e0; --accent: #007AC2; --blue: #004B87;
+  --muted: #6b7a8d; --wf-img: #d4dde6; --wf-dark: #9aaabb; --wf-med: #b8c6d4; --wf-light: #e0e8f0;
+  --block-bg: #ffffff; --header-bg: #edf2f7; --dyn-bg: #e8f2fa; --dyn-border: #007AC2;
+  --req-bg: #e8f2fa; --opt-bg: #f0f4f8; --gdpr-bg: #fff8e1; --gdpr-border: #f9a825;
+  --mm-bg: #e8f5e9; --mm-border: #2e7d32;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Titillium Web', sans-serif; background: var(--paper); color: var(--ink); line-height: 1.5; }
+.cover { min-height: 100vh; background: var(--blue); display: flex; flex-direction: column; justify-content: flex-end; padding: 48px 56px; position: relative; overflow: hidden; }
+.cover-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px); background-size: 32px 32px; }
+.cover-accent { position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent); }
+.cover-tag { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #f0f0f0; margin-bottom: 32px; position: relative; }
+.cover h1 { font-family: 'Teko', sans-serif; font-size: clamp(52px, 9vw, 96px); font-weight: 600; color: white; line-height: 0.95; margin-bottom: 8px; position: relative; letter-spacing: 0.02em; text-transform: uppercase; }
+.cover h1 em { color: var(--accent); font-style: normal; }
+.cover-sub { font-size: 12px; color: #cecece; margin-top: 24px; margin-bottom: 8px; letter-spacing: 0.05em; position: relative; }
+.cover-markets { font-size: 11px; color: #c7c7c7; letter-spacing: 0.15em; position: relative; }
+.cover-count { position: absolute; top: 48px; right: 56px; text-align: right; }
+.cover-count .num { font-family: 'Teko', sans-serif; font-size: 80px; color: var(--accent); line-height: 1; }
+.cover-count .num-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #555; }
+.sticky-nav { position: sticky; top: 0; background: var(--blue); z-index: 100; display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; }
+.sticky-nav a { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: #a0bcd4; padding: 10px 16px; text-decoration: none; white-space: nowrap; transition: color 0.15s, background 0.15s; border-right: 1px solid #003865; font-family: 'Titillium Web', sans-serif; font-weight: 600; }
+.sticky-nav a:hover { color: white; background: #003865; }
+.sticky-nav .na { color: #69B3E7; }
+.toc-section { padding: 48px 56px; border-bottom: 1px solid var(--rule); }
+.toc-section h2 { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 24px; }
+.toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+.toc-group { margin-bottom: 8px; }
+.toc-group-title { font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; background: var(--blue); color: white; padding: 6px 12px; display: flex; align-items: center; gap: 10px; font-family: 'Titillium Web', sans-serif; }
+.toc-group-title .gl { color: var(--accent); font-family: 'Teko', sans-serif; font-size: 15px; letter-spacing: 0.05em; }
+.toc-item { font-size: 10px; color: var(--muted); padding: 5px 12px; background: var(--block-bg); border-bottom: 1px solid var(--rule); text-decoration: none; display: block; transition: background 0.1s; }
+.toc-item:hover { background: var(--header-bg); color: var(--ink); }
+.group-header { padding: 40px 56px 16px; display: flex; align-items: baseline; gap: 16px; border-top: 3px solid var(--accent); margin-top: 48px; }
+.group-letter { font-family: 'Teko', sans-serif; font-size: 40px; color: var(--accent); line-height: 1; letter-spacing: 0.02em; }
+.group-name { font-size: 11px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+.blocks-container { padding: 0 56px 24px; display: flex; flex-direction: column; gap: 16px; }
+.block-card { background: var(--block-bg); border: 1px solid var(--rule); overflow: hidden; }
+.block-header { display: flex; align-items: center; border-bottom: 1px solid var(--rule); background: var(--header-bg); flex-wrap: wrap; }
+.block-num { background: var(--accent); color: white; font-size: 10px; font-weight: 600; padding: 10px 14px; min-width: 44px; text-align: center; align-self: stretch; display: flex; align-items: center; justify-content: center; letter-spacing: 0.05em; }
+.block-title { padding: 10px 16px; flex: 1; font-size: 11px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; }
+.block-tags { display: flex; gap: 6px; padding: 10px 16px; flex-wrap: wrap; }
+.tag { font-size: 8px; font-weight: 500; padding: 3px 8px; text-transform: uppercase; letter-spacing: 0.1em; border: 1px solid; }
+.tag-required  { background: var(--req-bg);  color: var(--accent);    border-color: var(--accent); }
+.tag-optional  { background: var(--opt-bg);  color: var(--muted);     border-color: var(--wf-dark); }
+.tag-dynamic   { background: var(--dyn-bg);  color: var(--dyn-border);border-color: var(--dyn-border); }
+.tag-gdpr      { background: var(--gdpr-bg); color: #7a5c00;          border-color: var(--gdpr-border); }
+.tag-multimarket { background: var(--mm-bg); color: var(--mm-border); border-color: var(--mm-border); }
+.block-body { display: grid; grid-template-columns: 1fr 1fr; }
+.wf-area { padding: 24px; border-right: 1px solid var(--rule); background: #fafaf8; display: flex; align-items: flex-start; justify-content: center; }
+.wf-email { width: 100%; max-width: 320px; border: 1.5px solid #ccc; background: white; }
+.wf-img { background: var(--wf-img) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Cline x1='0' y1='0' x2='100%25' y2='100%25' stroke='%23aaa49e' stroke-width='1' opacity='0.4'/%3E%3Cline x1='100%25' y1='0' x2='0' y2='100%25' stroke='%23aaa49e' stroke-width='1' opacity='0.4'/%3E%3C/svg%3E") center/cover; display: flex; align-items: center; justify-content: center; font-size: 8px; color: var(--wf-dark); letter-spacing: 0.1em; text-transform: uppercase; }
+.wf-row { padding: 10px 12px; border-bottom: 1px dashed #e0dbd4; display: flex; flex-direction: column; gap: 5px; }
+.wf-row:last-child { border-bottom: none; }
+.wf-bar { border-radius: 1px; height: 5px; background: var(--ink); }
+.wf-bar.xl { height: 8px; }
+.wf-bar.sm { height: 4px; background: var(--muted); }
+.wf-bar.red { background: var(--accent); }
+.wf-btn { height: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 7px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; border-radius: 1px; min-width: 80px; max-width: 140px; font-family: 'Titillium Web', sans-serif; }
+.wf-btn.filled { background: var(--accent); color: white; }
+.wf-btn.outline { border: 1.5px solid var(--accent); color: var(--accent); }
+.wf-logo { background: var(--wf-light); border: 1px solid var(--rule); width: 64px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 7px; color: var(--muted); letter-spacing: 0.1em; }
+.wf-link { font-size: 8px; color: var(--blue); text-decoration: underline; letter-spacing: 0.05em; }
+.wf-center { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.wf-price-old { height: 4px; width: 36px; background: var(--wf-dark); position: relative; }
+.wf-price-old::after { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--accent); }
+.wf-price-new { height: 7px; width: 50px; background: var(--accent); border-radius: 1px; }
+.wf-badge { background: var(--accent); color: white; font-size: 7px; font-weight: 500; padding: 2px 6px; display: inline-block; }
+.wf-icon-circle { width: 28px; height: 28px; border-radius: 50%; background: var(--wf-dark); display: flex; align-items: center; justify-content: center; font-size: 7px; color: white; font-weight: 500; flex-shrink: 0; }
+.wf-divider { border: none; border-top: 1.5px solid var(--ink); margin: 4px 0; }
+.wf-divider.light { border-color: var(--rule); border-width: 1px; }
+.wf-spacer { height: 14px; background: repeating-linear-gradient(45deg, #f0ece6, #f0ece6 2px, white 2px, white 8px); border: 1px dashed var(--rule); }
+.wf-count-box { width: 32px; height: 32px; background: var(--blue); display: flex; align-items: center; justify-content: center; }
+.wf-count-num { font-size: 13px; font-weight: 500; color: white; }
+.wf-count-label { font-size: 6px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+.wf-footer-zone { border-top: 1px solid var(--rule); padding: 8px 10px; }
+.wf-footer-link { font-size: 7px; color: var(--muted); text-decoration: underline; }
+.wf-footer-link.unsubscribe { color: var(--blue); }
+.wf-addr { font-size: 6.5px; color: var(--wf-dark); line-height: 1.9; }
+.wf-product-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; padding: 10px 12px; }
+.wf-product-card { display: flex; flex-direction: column; gap: 4px; }
+.wf-blog-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 12px; }
+.wf-blog-card { display: flex; flex-direction: column; gap: 4px; }
+.spec-area { padding: 24px; }
+.spec-section { margin-bottom: 14px; }
+.spec-label { font-size: 9px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.spec-list { list-style: none; font-size: 10px; color: var(--ink); display: flex; flex-direction: column; gap: 3px; }
+.spec-list li { padding-left: 12px; position: relative; line-height: 1.5; }
+.spec-list li::before { content: '·'; position: absolute; left: 2px; color: var(--muted); }
+.spec-rule { border: none; border-top: 1px solid var(--rule); margin: 12px 0; }
+.spec-dynamic { font-size: 10px; color: var(--blue); display: flex; flex-direction: column; gap: 3px; background: var(--dyn-bg); border-left: 2px solid var(--blue); padding: 8px 10px; margin-top: 10px; }
+.spec-dynamic .dl { font-size: 8px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--blue); margin-bottom: 2px; }
+.spec-dynamic span { padding-left: 14px; position: relative; line-height: 1.5; }
+.spec-dynamic span::before { content: '⚡'; position: absolute; left: 0; font-size: 8px; }
+.spec-note { font-size: 9px; color: var(--muted); font-style: italic; margin-top: 8px; border-top: 1px solid var(--rule); padding-top: 8px; line-height: 1.6; }
+.legend-section { padding: 48px 56px; margin-top: 48px; border-top: 3px solid var(--accent); }
+.legend-section h2 { font-family: 'Teko', sans-serif; font-size: 32px; font-weight: 500; margin-bottom: 32px; letter-spacing: 0.02em; text-transform: uppercase; }
+.legend-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 32px; }
+.legend-item { background: var(--block-bg); border: 1px solid var(--rule); padding: 16px; display: flex; gap: 16px; align-items: flex-start; }
+.legend-item .tag { flex-shrink: 0; margin-top: 2px; }
+.legend-item-text { font-size: 10px; color: var(--muted); line-height: 1.6; }
+.legend-item-text strong { color: var(--ink); display: block; margin-bottom: 4px; font-size: 11px; }
+.notation-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 32px; }
+.notation-table th { text-align: left; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--rule); background: var(--header-bg); }
+.notation-table td { padding: 8px 12px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.notation-table td:first-child { font-weight: 500; color: var(--ink); white-space: nowrap; width: 160px; }
+.notation-table td:last-child { color: var(--muted); }
+.ampscript-note { background: var(--dyn-bg); border-left: 3px solid var(--blue); padding: 20px 24px; }
+.ampscript-note h3 { font-size: 10px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--blue); margin-bottom: 10px; }
+.ampscript-note p { font-size: 10px; color: var(--ink); line-height: 1.7; margin-bottom: 6px; }
+@media print {
+  .cover { page-break-after: always; } .toc-section { page-break-after: always; }
+  .group-header { page-break-before: always; } .block-card { page-break-inside: avoid; }
+  .legend-section { page-break-before: always; } .sticky-nav { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-grid"></div>
+  <div class="cover-accent"></div>
+  <div class="cover-tag">Stokker · Email System · Wireframe Specification</div>
+  <h1>Email<br><em>Blocks</em></h1>
+  <div class="cover-sub">Reusable module library for multi-market campaigns</div>
+  <div class="cover-markets">EST · LAT · LIT · FIN</div>
+  <div class="cover-count">
+    <div class="num">21</div>
+    <div class="num-label">Blocks defined</div>
+  </div>
+</div>
+
+<nav class="sticky-nav">
+  <a href="#toc">Index</a>
+  <a href="#group-a" class="na">A · Header</a>
+  <a href="#group-b" class="na">B · Hero</a>
+  <a href="#group-c" class="na">C · Content</a>
+  <a href="#group-d" class="na">D · Product</a>
+  <a href="#group-e" class="na">E · Blog</a>
+  <a href="#group-f" class="na">F · CTA</a>
+  <a href="#group-g" class="na">G · Utility</a>
+  <a href="#group-h" class="na">H · Footer</a>
+  <a href="#legend">Legend</a>
+</nav>
+
+<section class="toc-section" id="toc">
+  <h2>Table of Contents</h2>
+  <div class="toc-grid">
+    <div class="toc-group">
+      <div class="toc-group-title"><span class="gl">A</span> Header Blocks</div>
+      <a class="toc-item" href="#b01">01 · Header — Logo + View in browser</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-group-title"><span class="gl">B</span> Hero Blocks</div>
+      <a class="toc-item" href="#b02">02 · Hero — Full-Width Image + Text + CTA</a>
+      <a class="toc-item" href="#b03">03 · Hero — Text Only</a>
+      <a class="toc-item" href="#b04">04 · Banner — Dynamic Image + Text + CTA</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-group-title"><span class="gl">C</span> Content Blocks</div>
+      <a class="toc-item" href="#b05">05 · Body Text Block</a>
+      <a class="toc-item" href="#b06">06 · Two-Column: Text + Image</a>
+      <a class="toc-item" href="#b07">07 · Two-Column: Text + Text</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-group-title"><span class="gl">D</span> Product Blocks</div>
+      <a class="toc-item" href="#b08">08 · Product Block — With Price + CTA</a>
+      <a class="toc-item" href="#b09">09 · Product Block — No Price</a>
+      <a class="toc-item" href="#b10">10 · Product Block — Discount / Promo Price</a>
+      <a class="toc-item" href="#b11">11 · Product Row — 3 Products (1×3 Grid)</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-group-title"><span class="gl">E</span> Blog / Editorial</div>
+      <a class="toc-item" href="#b12">12 · Blog Teaser — Single Article</a>
+      <a class="toc-item" href="#b13">13 · Blog Teaser — Two Articles</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-group-title"><span class="gl">F</span> CTA Blocks</div>
+      <a class="toc-item" href="#b14">14 · Primary CTA Block</a>
+      <a class="toc-item" href="#b15">15 · Secondary CTA Block</a>
+      <a class="toc-item" href="#b16">16 · Button Styles Reference</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-group-title"><span class="gl">G</span> Utility Blocks</div>
+      <a class="toc-item" href="#b17">17 · Divider / Spacer</a>
+      <a class="toc-item" href="#b18">18 · Countdown Timer</a>
+      <a class="toc-item" href="#b19">19 · Social Media Icons Row</a>
+    </div>
+    <div class="toc-group">
+      <div class="toc-group-title"><span class="gl">H</span> Footer Blocks</div>
+      <a class="toc-item" href="#b20">20 · Footer — Full</a>
+      <a class="toc-item" href="#b21">21 · Footer — Minimal / Transactional</a>
+    </div>
+  </div>
+</section>
+
+<!-- GROUP A -->
+<div class="group-header" id="group-a"><div class="group-letter">A</div><div class="group-name">Header Blocks</div></div>
+<div class="blocks-container">
+  <div class="block-card" id="b01">
+    <div class="block-header">
+      <div class="block-num">01</div>
+      <div class="block-title">Header — Logo + View in Browser</div>
+      <div class="block-tags"><span class="tag tag-required">Required</span><span class="tag tag-dynamic">Dynamic</span><span class="tag tag-multimarket">Multi-market</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-row" style="flex-direction:row;justify-content:space-between;align-items:center;">
+          <div class="wf-logo">LOGO</div>
+          <span class="wf-link">View in browser →</span>
+        </div>
+        <div style="border-top:1px solid #e8e4df;"></div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Top of every email. Identifies the brand, provides a browser fallback link.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>Company logo — linked to market homepage (alignment up to design)</li>
+          <li>"View in browser" text link (can also be in the footer)</li>
+        </ul></div>
+        <div class="spec-dynamic"><div class="dl">Dynamic / AMPscript</div>
+          <span>Logo URL and homepage link = per-market variable</span>
+          <span>"View in browser" URL = SFMC system variable</span>
+        </div>
+        <div class="spec-note">Design decision open: "View in browser" may move to footer. Discuss with team before finalising layout.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GROUP B -->
+<div class="group-header" id="group-b"><div class="group-letter">B</div><div class="group-name">Hero Blocks</div></div>
+<div class="blocks-container">
+  <div class="block-card" id="b02">
+    <div class="block-header">
+      <div class="block-num">02</div>
+      <div class="block-title">Hero — Full-Width Image + Text + CTA</div>
+      <div class="block-tags"><span class="tag tag-required">Required</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-img" style="height:110px;">IMAGE</div>
+        <div class="wf-row">
+          <div class="wf-bar xl" style="width:70%;"></div>
+          <div class="wf-bar sm" style="width:55%;"></div>
+          <div style="margin-top:4px;"><div class="wf-btn filled">Primary CTA</div></div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Main visual hero at top of campaign emails. Sets theme and mood.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>Full-width hero image — min 600px wide</li>
+          <li>Headline — H1, large and bold</li>
+          <li>Supporting subtext — optional, 1–2 lines</li>
+          <li>Primary CTA button — filled style</li>
+        </ul></div>
+        <div class="spec-section"><div class="spec-label">Notes</div><ul class="spec-list">
+          <li>Image must work without text overlay — no text burned into image</li>
+          <li>Fallback background colour required for broken-image state</li>
+          <li>Alt text mandatory on image</li>
+          <li>Image links to campaign landing page</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block-card" id="b03">
+    <div class="block-header">
+      <div class="block-num">03</div>
+      <div class="block-title">Hero — Text Only</div>
+      <div class="block-tags"><span class="tag tag-optional">Optional</span><span class="tag tag-dynamic">Dynamic</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-row wf-center" style="padding:20px 12px;">
+          <div class="wf-bar xl" style="width:72%;"></div>
+          <div class="wf-bar" style="width:58%;height:6px;"></div>
+          <div class="wf-bar sm" style="width:85%;"></div>
+          <div class="wf-bar sm" style="width:70%;"></div>
+          <div style="margin-top:6px;"><div class="wf-btn filled">CTA</div></div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Hero for text-led campaigns — newsletters, seasonal greetings, announcements without a hero image.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>Headline — large, centred or left-aligned</li>
+          <li>Body copy — 1–3 lines</li>
+          <li>Optional CTA button</li>
+          <li>Background colour — brand or campaign</li>
+        </ul></div>
+        <div class="spec-dynamic"><div class="dl">Dynamic / AMPscript</div>
+          <span>Headline can include first name personalisation</span>
+          <span>Background colour = conditional per market theme</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block-card" id="b04">
+    <div class="block-header">
+      <div class="block-num">04</div>
+      <div class="block-title">Banner — Dynamic Image + Text + CTA</div>
+      <div class="block-tags"><span class="tag tag-optional">Optional</span><span class="tag tag-dynamic">Dynamic</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div style="position:relative;">
+          <div class="wf-img" style="height:90px;">IMAGE</div>
+          <div class="wf-badge" style="position:absolute;top:8px;left:8px;border-radius:2px;font-size:6px;">DYNAMIC OVERLAY</div>
+        </div>
+        <div class="wf-row">
+          <div class="wf-bar xl" style="width:65%;"></div>
+          <div class="wf-bar sm" style="width:50%;"></div>
+          <div style="margin-top:4px;"><div class="wf-btn outline">CTA Button</div></div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Flexible promo banner where image, text and CTA all update dynamically per campaign or market — without redesigning the block.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>Background image — swappable, changed in email HTML</li>
+          <li>Overlay headline text</li>
+          <li>Optional supporting subtext</li>
+          <li>CTA button — outline or filled, conditional per variant</li>
+        </ul></div>
+        <div class="spec-dynamic"><div class="dl">Dynamic / AMPscript</div>
+          <span>Image URL = changed in HTML (not supported by SFMC WYSIWYG)</span>
+          <span>Headline + subtext = AMPscript lookup per campaign row</span>
+          <span>CTA label and URL = dynamic per market / campaign</span>
+          <span>Button style = conditional (filled vs outline)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GROUP C -->
+<div class="group-header" id="group-c"><div class="group-letter">C</div><div class="group-name">Content Blocks</div></div>
+<div class="blocks-container">
+  <div class="block-card" id="b05">
+    <div class="block-header">
+      <div class="block-num">05</div>
+      <div class="block-title">Body Text Block</div>
+      <div class="block-tags"><span class="tag tag-optional">Optional</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-row">
+          <div class="wf-bar" style="width:55%;height:6px;"></div>
+          <div class="wf-bar sm" style="width:92%;"></div>
+          <div class="wf-bar sm" style="width:85%;"></div>
+          <div class="wf-bar sm" style="width:90%;"></div>
+          <div class="wf-bar sm" style="width:68%;"></div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Standalone editorial or narrative text. Used for intros, explanations, announcements.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>Optional heading (H2)</li>
+          <li>Body copy — multiple paragraphs supported</li>
+          <li>No image, no CTA — use dedicated blocks for those</li>
+        </ul></div>
+        <div class="spec-note">Max 600px width. Left-aligned. Generous line height. Supports basic inline formatting: bold, italic, links.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block-card" id="b06">
+    <div class="block-header">
+      <div class="block-num">06</div>
+      <div class="block-title">Two-Column: Text + Image</div>
+      <div class="block-tags"><span class="tag tag-optional">Optional</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-row" style="flex-direction:row;gap:8px;align-items:flex-start;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+            <div class="wf-bar" style="width:90%;height:6px;"></div>
+            <div class="wf-bar sm" style="width:95%;"></div>
+            <div class="wf-bar sm" style="width:85%;"></div>
+            <div class="wf-bar sm" style="width:88%;"></div>
+            <div style="margin-top:4px;"><div class="wf-btn filled" style="font-size:6px;min-width:60px;">CTA</div></div>
+          </div>
+          <div class="wf-img" style="flex:1;height:90px;min-width:0;">IMG</div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Split layout — editorial text on one side, supporting image on the other.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>Left: heading + body copy + optional CTA</li>
+          <li>Right: image — linked or decorative</li>
+          <li>Variant: image left / text right — mirrored</li>
+        </ul></div>
+        <div class="spec-note">Mobile: stacks vertically — image below text. Image min 280px wide, ratio the same as used on webpage.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block-card" id="b07">
+    <div class="block-header">
+      <div class="block-num">07</div>
+      <div class="block-title">Two-Column: Text + Text</div>
+      <div class="block-tags"><span class="tag tag-optional">Optional</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-row" style="flex-direction:row;gap:8px;align-items:flex-start;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:5px;border-right:1px solid #e0dbd4;padding-right:8px;">
+            <div class="wf-bar" style="width:85%;height:5px;"></div>
+            <div class="wf-bar sm" style="width:90%;"></div>
+            <div class="wf-bar sm" style="width:80%;"></div>
+            <div style="margin-top:4px;"><div class="wf-btn outline" style="font-size:6px;min-width:60px;">CTA</div></div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+            <div class="wf-bar" style="width:85%;height:5px;"></div>
+            <div class="wf-bar sm" style="width:90%;"></div>
+            <div class="wf-bar sm" style="width:75%;"></div>
+            <div style="margin-top:4px;"><div class="wf-btn outline" style="font-size:6px;min-width:60px;">CTA</div></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Two parallel content areas — comparing two offers, categories or services side by side.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>Left: heading + copy + CTA</li>
+          <li>Right: heading + copy + CTA</li>
+          <li>Both CTAs can lead to different pages</li>
+        </ul></div>
+        <div class="spec-note">Mobile: stacks vertically. Good for Stokker Rent vs Stokker Shop comparisons.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GROUP D -->
+<div class="group-header" id="group-d"><div class="group-letter">D</div><div class="group-name">Product Blocks</div></div>
+<div class="blocks-container">
+  <div class="block-card" id="b08">
+    <div class="block-header">
+      <div class="block-num">08</div>
+      <div class="block-title">Product Block — With Price + CTA</div>
+      <div class="block-tags"><span class="tag tag-required">Required</span><span class="tag tag-dynamic">Dynamic</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-row" style="max-width:160px;">
+          <div class="wf-img" style="height:90px;">IMG</div>
+          <div class="wf-bar" style="width:85%;height:5px;"></div>
+          <div class="wf-bar sm" style="width:60%;"></div>
+          <div class="wf-bar red" style="width:35%;height:6px;"></div>
+          <div style="margin-top:4px;"><div class="wf-btn filled">Add to cart</div></div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Standard product card. Core block for product campaigns and newsletters.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>Product image — linked to product page</li>
+          <li>Product name — linked to product page</li>
+          <li>SKU or short description — optional</li>
+          <li>Price — currency per market</li>
+          <li>Primary CTA button</li>
+        </ul></div>
+        <div class="spec-dynamic"><div class="dl">Dynamic / AMPscript</div>
+          <span>All fields pulled from ProductsMaster Data Extension</span>
+          <span>Product URL = market-specific domain</span>
+          <span>Image URL = absolute path from DE field</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block-card" id="b09">
+    <div class="block-header">
+      <div class="block-num">09</div>
+      <div class="block-title">Product Block — No Price</div>
+      <div class="block-tags"><span class="tag tag-optional">Optional</span><span class="tag tag-dynamic">Dynamic</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-row" style="max-width:160px;">
+          <div class="wf-img" style="height:80px;">IMG</div>
+          <div class="wf-bar" style="width:85%;height:5px;"></div>
+          <div class="wf-bar sm" style="width:70%;"></div>
+          <div class="wf-bar sm" style="width:60%;"></div>
+          <div style="margin-top:4px;"><div class="wf-btn outline">View product</div></div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Product showcase without price — for B2B, quote-based items, or rental equipment (Stokker Rent).</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>Product image</li>
+          <li>Product name</li>
+          <li>Short description — 1–2 lines</li>
+          <li>CTA button — outline / secondary style</li>
+          <li>No price field</li>
+        </ul></div>
+        <div class="spec-dynamic"><div class="dl">Dynamic / AMPscript</div>
+          <span>Same DE as Block 08 — price field conditionally hidden</span>
+          <span>CTA label = "Ask for offer" or market-language equivalent</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block-card" id="b10">
+    <div class="block-header">
+      <div class="block-num">10</div>
+      <div class="block-title">Product Block — Discount / Promo Price</div>
+      <div class="block-tags"><span class="tag tag-optional">Optional</span><span class="tag tag-dynamic">Dynamic</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-row" style="max-width:160px;">
+          <div style="position:relative;">
+            <div class="wf-img" style="height:90px;">IMG</div>
+            <div style="position:absolute;top:6px;right:6px;background:var(--accent);color:white;font-size:7px;font-weight:500;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;">-25%</div>
+          </div>
+          <div class="wf-bar" style="width:85%;height:5px;"></div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <div class="wf-price-old"></div>
+            <div class="wf-price-new"></div>
+          </div>
+          <div class="wf-bar sm" style="width:55%;"></div>
+          <div style="margin-top:4px;"><div class="wf-btn filled">Add to cart</div></div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Promotional product block with discount badge, crossed-out original price, and highlighted sale price.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>Product image</li>
+          <li>Discount badge — e.g. "-25%" or "SALE" — overlaid on image corner</li>
+          <li>Product name</li>
+          <li>Original price — strikethrough (only if this method is used on webpage)</li>
+          <li>Promo price — highlighted in selected brand colour</li>
+          <li>Optional bonus label — "Free shipping", "Gift included" etc.</li>
+          <li>CTA button — filled, primary</li>
+        </ul></div>
+        <div class="spec-dynamic"><div class="dl">Dynamic / AMPscript</div>
+          <span>Original and sale price = separate DE fields</span>
+          <span>Badge text = dynamic — percentage or fixed amount</span>
+          <span>Bonus label = conditional show/hide from AMPscript</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block-card" id="b11">
+    <div class="block-header">
+      <div class="block-num">11</div>
+      <div class="block-title">Product Row — 3 Products (1×3 Grid)</div>
+      <div class="block-tags"><span class="tag tag-required">Required</span><span class="tag tag-dynamic">Dynamic</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-product-grid">
+          <div class="wf-product-card">
+            <div class="wf-img" style="height:60px;font-size:7px;">IMG</div>
+            <div class="wf-bar" style="width:90%;height:4px;"></div>
+            <div class="wf-bar sm" style="width:60%;"></div>
+            <div class="wf-bar red" style="width:40%;height:4px;"></div>
+            <div class="wf-btn filled" style="width:100%;font-size:6px;height:18px;">View</div>
+          </div>
+          <div class="wf-product-card">
+            <div class="wf-img" style="height:60px;font-size:7px;">IMG</div>
+            <div class="wf-bar" style="width:85%;height:4px;"></div>
+            <div class="wf-bar sm" style="width:65%;"></div>
+            <div class="wf-bar red" style="width:45%;height:4px;"></div>
+            <div class="wf-btn filled" style="width:100%;font-size:6px;height:18px;">View</div>
+          </div>
+          <div class="wf-product-card">
+            <div class="wf-img" style="height:60px;font-size:7px;">IMG</div>
+            <div class="wf-bar" style="width:80%;height:4px;"></div>
+            <div class="wf-bar sm" style="width:55%;"></div>
+            <div class="wf-bar red" style="width:38%;height:4px;"></div>
+            <div class="wf-btn filled" style="width:100%;font-size:6px;height:18px;">View</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>3-product grid for campaign emails and newsletters. Highest product exposure per block.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>3 equal-width product cards</li>
+          <li>Each card: image, name, price, CTA button</li>
+        </ul></div>
+        <div class="spec-dynamic"><div class="dl">Dynamic / AMPscript</div>
+          <span>Products rendered via AMPscript FOR loop from ProductsMaster DE</span>
+          <span>Loop outputs 3 cards — count is configurable</span>
+        </div>
+        <div class="spec-note">Mobile: cards stack vertically to 1 column. Design system should support 1-, 2-, and 3-column variants using the same card component (Block 08).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GROUP E -->
+<div class="group-header" id="group-e"><div class="group-letter">E</div><div class="group-name">Blog / Editorial</div></div>
+<div class="blocks-container">
+  <div class="block-card" id="b12">
+    <div class="block-header">
+      <div class="block-num">12</div>
+      <div class="block-title">Blog Teaser — Single Article</div>
+      <div class="block-tags"><span class="tag tag-optional">Optional</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-row" style="flex-direction:row;gap:8px;align-items:flex-start;">
+          <div class="wf-img" style="flex:0 0 40%;height:80px;font-size:7px;">IMG</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+            <div class="wf-bar red" style="width:40%;height:3px;"></div>
+            <div class="wf-bar" style="width:90%;height:5px;"></div>
+            <div class="wf-bar" style="width:80%;height:5px;"></div>
+            <div class="wf-bar sm" style="width:95%;"></div>
+            <div class="wf-bar sm" style="width:75%;"></div>
+            <div style="margin-top:4px;"><div class="wf-btn outline" style="font-size:6px;min-width:60px;">Read more</div></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Promote a single blog article or guide. Drives traffic to content hub.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>Article image — same ratio as used on the webpage (4:3 or 1:1)</li>
+          <li>Category tag / label (e.g. "Guide", "News")</li>
+          <li>Article title — linked, max ~70 characters</li>
+          <li>Excerpt / teaser — 2–3 lines</li>
+          <li>"Read more" — outline button or text link</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block-card" id="b13">
+    <div class="block-header">
+      <div class="block-num">13</div>
+      <div class="block-title">Blog Teaser — Two Articles</div>
+      <div class="block-tags"><span class="tag tag-optional">Optional</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-blog-grid">
+          <div class="wf-blog-card">
+            <div class="wf-img" style="height:55px;font-size:7px;">IMG</div>
+            <div class="wf-bar red" style="width:40%;height:3px;"></div>
+            <div class="wf-bar" style="width:90%;height:5px;"></div>
+            <div class="wf-bar sm" style="width:85%;"></div>
+            <div class="wf-btn outline" style="width:100%;font-size:6px;height:18px;">Read more</div>
+          </div>
+          <div class="wf-blog-card">
+            <div class="wf-img" style="height:55px;font-size:7px;">IMG</div>
+            <div class="wf-bar red" style="width:40%;height:3px;"></div>
+            <div class="wf-bar" style="width:85%;height:5px;"></div>
+            <div class="wf-bar sm" style="width:80%;"></div>
+            <div class="wf-btn outline" style="width:100%;font-size:6px;height:18px;">Read more</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Side-by-side two-article layout for newsletters or content digests.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>2 article cards — equal visual weight</li>
+          <li>Each: image, category, title, excerpt, CTA</li>
+        </ul></div>
+        <div class="spec-note">Mobile: stacks vertically. Both articles must carry equal visual weight — no hierarchy between left and right.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GROUP F -->
+<div class="group-header" id="group-f"><div class="group-letter">F</div><div class="group-name">CTA Blocks</div></div>
+<div class="blocks-container">
+  <div class="block-card" id="b14">
+    <div class="block-header">
+      <div class="block-num">14</div>
+      <div class="block-title">Primary CTA Block</div>
+      <div class="block-tags"><span class="tag tag-optional">Optional</span><span class="tag tag-dynamic">Dynamic</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-row wf-center" style="background:var(--header-bg);padding:20px 12px;">
+          <div class="wf-bar xl" style="width:70%;"></div>
+          <div class="wf-bar sm" style="width:55%;"></div>
+          <div style="margin-top:8px;"><div class="wf-btn filled" style="min-width:120px;">PRIMARY CTA</div></div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Dedicated full-width CTA section. Drives one primary action — no competing elements.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>Headline — strong, direct, one line</li>
+          <li>Optional supporting text — 1–2 lines</li>
+          <li>One large filled CTA button — centred</li>
+          <li>Optional background colour (brand accent or campaign colour)</li>
+        </ul></div>
+        <div class="spec-dynamic"><div class="dl">Dynamic / AMPscript</div>
+          <span>Headline and CTA URL = dynamic per campaign</span>
+          <span>Background colour = conditional per block variant flag</span>
+        </div>
+        <div class="spec-note">One CTA per block. No competing links. The whole block can optionally be the link target.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block-card" id="b15">
+    <div class="block-header">
+      <div class="block-num">15</div>
+      <div class="block-title">Secondary CTA Block</div>
+      <div class="block-tags"><span class="tag tag-optional">Optional</span><span class="tag tag-dynamic">Dynamic</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-row wf-center" style="padding:16px 12px;">
+          <div class="wf-bar" style="width:65%;height:5px;"></div>
+          <div class="wf-bar sm" style="width:50%;"></div>
+          <div style="margin-top:6px;"><div class="wf-btn outline">Secondary CTA</div></div>
+          <span class="wf-link" style="margin-top:4px;font-size:8px;">or browse all products →</span>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Lower-priority action — used alongside a primary CTA or as email close.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>Short headline — optional</li>
+          <li>Outline-style button — secondary visual weight</li>
+          <li>Optional text link below button</li>
+        </ul></div>
+        <div class="spec-dynamic"><div class="dl">Dynamic / AMPscript</div>
+          <span>Button label and URL = dynamic per campaign</span>
+          <span>Text link = conditional show/hide</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block-card" id="b16">
+    <div class="block-header">
+      <div class="block-num">16</div>
+      <div class="block-title">Button Styles Reference</div>
+      <div class="block-tags"><span class="tag tag-required">Required</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-row" style="gap:10px;padding:16px 12px;">
+          <div class="wf-btn filled" style="min-width:140px;">Primary · Filled</div>
+          <div class="wf-btn outline" style="min-width:140px;">Secondary · Outline</div>
+          <span class="wf-link" style="padding:3px 0;">Text link / tertiary →</span>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Reference block defining all button and link styles used across the email system.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Styles to define</div><ul class="spec-list">
+          <li><strong>Primary / Filled</strong> — main action, one per section, high contrast</li>
+          <li><strong>Secondary / Outline</strong> — supporting action, border only, lower weight</li>
+          <li><strong>Text link</strong> — tertiary, underlined, used inline or below buttons</li>
+        </ul></div>
+        <div class="spec-note">Filled buttons need a VML fallback for Outlook (rounded corners not natively supported). Minimum tap target 44×44px on mobile. Each style needs hover state defined.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GROUP G -->
+<div class="group-header" id="group-g"><div class="group-letter">G</div><div class="group-name">Utility Blocks</div></div>
+<div class="blocks-container">
+  <div class="block-card" id="b17">
+    <div class="block-header">
+      <div class="block-num">17</div>
+      <div class="block-title">Divider / Spacer</div>
+      <div class="block-tags"><span class="tag tag-optional">Optional</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-row" style="gap:12px;">
+          <div><div class="wf-divider"></div><div style="font-size:7px;color:var(--muted);margin-top:3px;">Full rule</div></div>
+          <div><div class="wf-spacer"></div><div style="font-size:7px;color:var(--muted);margin-top:3px;">Spacer — 8 / 16 / 24 / 32px</div></div>
+          <div><div class="wf-divider light"></div><div style="font-size:7px;color:var(--muted);margin-top:3px;">Light rule</div></div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Controls visual rhythm and breathing room between blocks.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Variants</div><ul class="spec-list">
+          <li>Full horizontal rule — dark, full width</li>
+          <li>Light rule — reduced weight or opacity</li>
+          <li>Spacer only — empty block, configurable height</li>
+          <li>Rule + spacer — combined, most common use</li>
+        </ul></div>
+        <div class="spec-note">Spacer heights: 8 / 16 / 24 / 32px. These four values cover all spacing needs in the system.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block-card" id="b18">
+    <div class="block-header">
+      <div class="block-num">18</div>
+      <div class="block-title">Countdown Timer</div>
+      <div class="block-tags"><span class="tag tag-optional">Optional</span><span class="tag tag-dynamic">Dynamic</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-row wf-center" style="padding:16px 12px;">
+          <div style="display:flex;gap:4px;align-items:flex-end;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;"><div class="wf-count-box"><span class="wf-count-num">00</span></div><span class="wf-count-label">days</span></div>
+            <div style="font-size:18px;font-weight:700;margin-bottom:12px;color:var(--ink);">:</div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;"><div class="wf-count-box"><span class="wf-count-num">00</span></div><span class="wf-count-label">hrs</span></div>
+            <div style="font-size:18px;font-weight:700;margin-bottom:12px;color:var(--ink);">:</div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;"><div class="wf-count-box"><span class="wf-count-num">00</span></div><span class="wf-count-label">min</span></div>
+            <div style="font-size:18px;font-weight:700;margin-bottom:12px;color:var(--ink);">:</div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;"><div class="wf-count-box"><span class="wf-count-num">00</span></div><span class="wf-count-label">sec</span></div>
+          </div>
+          <div class="wf-bar sm" style="width:60%;"></div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Urgency element — time remaining until campaign end, fair, sale deadline, or event.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>4 digit blocks: Days / Hours / Minutes / Seconds</li>
+          <li>Label below each block</li>
+          <li>Optional supporting text above or below timer</li>
+        </ul></div>
+        <div class="spec-dynamic"><div class="dl">Dynamic / AMPscript</div><span>End datetime = set per campaign from DE or attribute</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block-card" id="b19">
+    <div class="block-header">
+      <div class="block-num">19</div>
+      <div class="block-title">Social Media Icons Row</div>
+      <div class="block-tags"><span class="tag tag-optional">Optional</span><span class="tag tag-multimarket">Multi-market</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-row wf-center" style="padding:12px;">
+          <div class="wf-bar sm" style="width:45%;"></div>
+          <div style="display:flex;gap:10px;">
+            <div class="wf-icon-circle">FB</div>
+            <div class="wf-icon-circle">IG</div>
+            <div class="wf-icon-circle">LI</div>
+            <div class="wf-icon-circle">YT</div>
+          </div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Social channel links — placed near footer or at end of newsletter.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>Optional heading — "Follow us" or similar</li>
+          <li>Icon buttons: Facebook, Instagram, LinkedIn, YouTube</li>
+          <li>Which channels are shown = conditional per market</li>
+        </ul></div>
+        <div class="spec-dynamic"><div class="dl">Dynamic / AMPscript</div>
+          <span>Social URLs = dynamic per market — each market has separate accounts</span>
+          <span>Which icons are shown = conditional per market</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GROUP H -->
+<div class="group-header" id="group-h"><div class="group-letter">H</div><div class="group-name">Footer Blocks</div></div>
+<div class="blocks-container">
+  <div class="block-card" id="b20">
+    <div class="block-header">
+      <div class="block-num">20</div>
+      <div class="block-title">Footer — Full</div>
+      <div class="block-tags"><span class="tag tag-required">Required</span><span class="tag tag-dynamic">Dynamic</span><span class="tag tag-gdpr">GDPR</span><span class="tag tag-multimarket">Multi-market</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-footer-zone" style="padding-top:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div class="wf-logo">LOGO</div>
+            <div style="display:flex;gap:6px;">
+              <div class="wf-icon-circle" style="width:22px;height:22px;font-size:6px;">FB</div>
+              <div class="wf-icon-circle" style="width:22px;height:22px;font-size:6px;">IG</div>
+              <div class="wf-icon-circle" style="width:22px;height:22px;font-size:6px;">LI</div>
+            </div>
+          </div>
+        </div>
+        <div class="wf-footer-zone">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="wf-footer-link">Privacy Policy</span>
+            <span style="font-size:7px;color:var(--rule);">·</span>
+            <span class="wf-footer-link">Terms</span>
+            <span style="font-size:7px;color:var(--rule);">·</span>
+            <span class="wf-footer-link">Cookies</span>
+            <span style="font-size:7px;color:var(--rule);">·</span>
+            <span class="wf-footer-link unsubscribe">Unsubscribe</span>
+          </div>
+        </div>
+        <div class="wf-footer-zone">
+          <div class="wf-addr">[Legal entity name] · [Street, City, Country] · Reg. no. [XXXXXXX]<br>You received this email because you subscribed to Stokker.</div>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Required — Legal / GDPR</div><ul class="spec-list">
+          <li>Unsubscribe link — mandatory, must be clearly visible</li>
+          <li>Physical mailing address</li>
+          <li>Legal entity name and registration number</li>
+          <li>Privacy Policy link</li>
+        </ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Required — Brand</div><ul class="spec-list">
+          <li>Logo — linked to homepage</li>
+          <li>Social media icon links</li>
+          <li>Terms & Conditions link</li>
+          <li>Cookie Policy link</li>
+          <li>Copyright notice with year</li>
+        </ul></div>
+        <div class="spec-dynamic"><div class="dl">Dynamic / AMPscript</div>
+          <span>All URLs, entity names, addresses = dynamic per market</span>
+          <span>Unsubscribe link = SFMC AMPscript system variable</span>
+          <span>Copyright year = dynamic DatePart function</span>
+          <span>Social URLs = per-market variables</span>
+        </div>
+        <div class="spec-note">Must render correctly in all 4 market language contexts. Design must accommodate varying legal text lengths across EST / LAT / LIT / FIN.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block-card" id="b21">
+    <div class="block-header">
+      <div class="block-num">21</div>
+      <div class="block-title">Footer — Minimal / Transactional</div>
+      <div class="block-tags"><span class="tag tag-required">Required</span><span class="tag tag-dynamic">Dynamic</span><span class="tag tag-gdpr">GDPR</span></div>
+    </div>
+    <div class="block-body">
+      <div class="wf-area"><div class="wf-email">
+        <div class="wf-footer-zone wf-center" style="gap:6px;text-align:center;">
+          <div class="wf-addr">[Legal entity] · [Address] · Reg. [No.]</div>
+          <span class="wf-link" style="font-size:8px;">Unsubscribe from these emails</span>
+        </div>
+      </div></div>
+      <div class="spec-area">
+        <div class="spec-section"><div class="spec-label">Purpose</div><ul class="spec-list"><li>Stripped-down footer for transactional emails, order confirmations, and automated system messages.</li></ul></div>
+        <hr class="spec-rule">
+        <div class="spec-section"><div class="spec-label">Elements</div><ul class="spec-list">
+          <li>Legal address — single line</li>
+          <li>Unsubscribe link — mandatory</li>
+          <li>Copyright notice</li>
+          <li>No logo, no social icons, no navigation links</li>
+        </ul></div>
+        <div class="spec-dynamic"><div class="dl">Dynamic / AMPscript</div>
+          <span>Address and entity name = per-market variable</span>
+          <span>Unsubscribe = mandatory SFMC system variable</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend-section" id="legend">
+  <h2>Legend &amp; Notation Guide</h2>
+  <div class="legend-grid">
+    <div class="legend-item"><span class="tag tag-required">Required</span><div class="legend-item-text"><strong>Required</strong>Must be present in all email templates. Cannot be omitted.</div></div>
+    <div class="legend-item"><span class="tag tag-optional">Optional</span><div class="legend-item-text"><strong>Optional</strong>Situational. Include when the campaign calls for it. Usually derivates from "Required" blocks.</div></div>
+    <div class="legend-item"><span class="tag tag-dynamic">Dynamic</span><div class="legend-item-text"><strong>Dynamic / AMPscript</strong>Content populated at send time. Design must accommodate variable text length and optional show/hide states.</div></div>
+    <div class="legend-item"><span class="tag tag-gdpr">GDPR</span><div class="legend-item-text"><strong>GDPR</strong>Contains legally required elements. Cannot be omitted, moved, or visually obscured.</div></div>
+    <div class="legend-item"><span class="tag tag-multimarket">Multi-market</span><div class="legend-item-text"><strong>Multi-market</strong>Has per-market variants. URLs, text, and assets may differ across EST / LAT / LIT / FIN.</div></div>
+  </div>
+  <table class="notation-table">
+    <thead><tr><th>Symbol</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>⊞ hatched rectangle</td><td>Image placeholder — replace with actual asset in Figma</td></tr>
+      <tr><td>━━ dark bar</td><td>Text element — bar width = approximate relative text length</td></tr>
+      <tr><td>░ filled button</td><td>Primary / filled CTA button</td></tr>
+      <tr><td>□ outline button</td><td>Secondary / outline CTA button</td></tr>
+      <tr><td>[ bracket text ]</td><td>Dynamic or variable text field — populated at send time</td></tr>
+      <tr><td>· · · dashed border</td><td>Hidden or conditional element (preheader, spacer, optional content)</td></tr>
+      <tr><td>⚡ blue note</td><td>AMPscript / dynamic behaviour — relevant to HTML developer, not design</td></tr>
+    </tbody>
+  </table>
+  <div class="ampscript-note">
+    <h3>Note for Design Agency — Dynamic Content</h3>
+    <p>Blocks marked <strong>Dynamic / AMPscript</strong> are rendered server-side via Salesforce Marketing Cloud at send time — not at design time. Text, images, URLs and element visibility are populated dynamically per recipient or per campaign.</p>
+    <p>Design must accommodate: <strong>variable text length</strong> (design for both short and long variants), <strong>optional/hidden elements</strong> (block must look correct when optional elements are absent), and <strong>per-market differences</strong> in copy length and asset dimensions.</p>
+    <p>Please design with content flexibility in mind. Avoid fixed-height text containers. All text areas should expand gracefully.</p>
+  </div>
+</div>
+
+</body>
+</html>
