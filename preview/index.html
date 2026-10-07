@@ -396,26 +396,41 @@ function load(rows, source) {
 }
 function handle(text, html, source) {
   let ok = false;
+  // a NEW paste: forget the previous language choice and drop any shared-link #fragment
+  const prevLang = lang; lang = null;
+  if (location.hash) history.replaceState(null, "", location.pathname + location.search);
   if (text) { ok = load(parseTSV(text), source); if (ok) store.set("stokkerPreview.raw", text); }
   if (!ok && html) ok = load(parseHTMLTable(html), source);
+  if (!ok) lang = prevLang;
+  if (ok) flash();
+  else if (!text && !html) setStatus("Clipboard is empty – copy the table in Excel first.", "w");
 }
-
-document.addEventListener("paste", e => {
+function flash() {   // visible confirmation, also when the same content is pasted twice
+  const el = $("status"); el.style.transition = "none"; el.style.background = "#fde68a";
+  requestAnimationFrame(() => { el.style.transition = "background 1.2s"; el.style.background = "transparent"; });
+}
+function onPaste(e) {
   const cd = e.clipboardData; if (!cd) return;
   e.preventDefault();
   handle(cd.getData("text/plain"), cd.getData("text/html"), "pasted");
+}
+
+document.addEventListener("paste", onPaste);
+// Ctrl+V while the cursor/focus is inside the email preview must work too
+$("frame").addEventListener("load", () => {
+  try { $("frame").contentDocument.addEventListener("paste", onPaste); } catch (e) {}
 });
 $("btnPaste").onclick = async () => {
   try {
     let text = "", html = "";
-    if (navigator.clipboard.read) {
+    try {
       for (const item of await navigator.clipboard.read()) {
         if (item.types.includes("text/plain")) text = await (await item.getType("text/plain")).text();
         if (item.types.includes("text/html")) html = await (await item.getType("text/html")).text();
       }
-    } else text = await navigator.clipboard.readText();
+    } catch (e) { text = await navigator.clipboard.readText(); }   // fallback: plain text only
     handle(text, html, "pasted");
-  } catch (e) { setStatus("The browser blocked clipboard access – press Ctrl+V instead.", "w"); }
+  } catch (e) { setStatus("The browser blocked clipboard access – click the page and press Ctrl+V instead.", "w"); }
 };
 $("btnOpen").onclick = () => {
   const w = window.open(URL.createObjectURL(new Blob([current], { type: "text/html" })), "_blank");
