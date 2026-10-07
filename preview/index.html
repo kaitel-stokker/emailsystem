@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Stokker Email Preview</title>
+<style>
+  :root { --bg:#f3f4f6; --panel:#fff; --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --accent:#0D3B86; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.45 -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:var(--bg); color:var(--ink); }
+  header { position:sticky; top:0; z-index:5; background:var(--panel); border-bottom:1px solid var(--line); padding:10px 16px; display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; }
+  h1 { font-size:15px; margin:0 8px 0 0; }
+  button { font:inherit; border:1px solid var(--line); background:#fff; color:var(--ink); padding:6px 11px; border-radius:6px; cursor:pointer; }
+  button:hover:not(:disabled) { border-color:#9ca3af; }
+  button:disabled { opacity:.35; cursor:not-allowed; }
+  button.on { background:var(--ink); color:#fff; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+  #status { color:var(--muted); font-size:12px; margin-left:auto; }
+  #status.e { color:#991b1b; } #status.w { color:#92400e; }
+  main { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:16px; padding:16px; max-width:1200px; margin:0 auto; }
+  @media (max-width:900px) { main { grid-template-columns:1fr; } }
+  .inbox { background:var(--panel); border:1px solid var(--line); border-radius:8px 8px 0 0; padding:10px 14px; }
+  .inbox b { display:block; font-size:15px; }
+  .inbox span { color:var(--muted); font-size:13px; }
+  .frameWrap { background:#e5e7eb; border:1px solid var(--line); border-top:0; border-radius:0 0 8px 8px; display:flex; justify-content:center; padding:16px 0; }
+  iframe { border:0; background:#fff; width:100%; height:1100px; }
+  iframe.mobile { width:375px; }
+  aside section { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin-bottom:12px; }
+  aside h2 { font-size:12px; margin:0 0 8px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  ul { margin:0; padding-left:18px; } li { margin:3px 0; }
+  li.w { color:#92400e; } li.e { color:#991b1b; } li.ok { color:#166534; } li.i { color:#1e40af; }
+  #empty { grid-column:1/-1; background:var(--panel); border:2px dashed #cbd5e1; border-radius:12px; padding:40px 24px; text-align:center; }
+  #empty ol { text-align:left; display:inline-block; margin:12px auto 0; }
+  kbd { background:#f3f4f6; border:1px solid #d1d5db; border-radius:4px; padding:0 5px; font-size:12px; }
+  code { font-size:12px; background:#f3f4f6; padding:0 4px; border-radius:3px; }
+  table.ref { border-collapse:collapse; font-size:12px; width:100%; }
+  table.ref td { border-top:1px solid var(--line); padding:3px 4px; vertical-align:top; }
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Stokker Email Preview</h1>
+  <div id="langs" style="display:flex;gap:4px"></div>
+  <button id="btnPaste">Paste from Excel</button>
+  <button id="btnOpen" class="primary" disabled>Generate HTML Preview ↗</button>
+  <button id="btnDownload" disabled>Download .html</button>
+  <button id="btnCopy" disabled>Copy HTML</button>
+  <button id="btnMobile" disabled>Mobile 375px</button>
+  <button id="btnShare" disabled title="Link with this email's content, valid 24 h">Copy share link</button>
+  <div id="status">No data yet</div>
+</header>
+
+<main>
+  <div id="empty">
+    <b>Copy the <code>copy</code> table in Excel and press <kbd>Ctrl</kbd>+<kbd>V</kbd> here.</b>
+    <ol>
+      <li>In the brief, click inside the <code>copy</code> table, press <kbd>Ctrl</kbd>+<kbd>A</kbd> and <kbd>Ctrl</kbd>+<kbd>C</kbd> (the header row must be included).</li>
+      <li>Come back here and press <kbd>Ctrl</kbd>+<kbd>V</kbd>. The email is built from the copied language column (if there are several, pick one at the top), with blocks in Excel row order.</li>
+      <li>After editing the Excel, copy and paste again.</li>
+    </ol>
+    <p style="color:#6b7280;margin-top:16px">Nothing is uploaded – everything happens in this browser.</p>
+  </div>
+  <div id="previewCol" class="hidden">
+    <div class="inbox"><b id="subj"></b><span id="pre"></span></div>
+    <div class="frameWrap"><iframe id="frame" title="Email preview"></iframe></div>
+  </div>
+  <aside id="side" class="hidden">
+    <section><h2>Checks</h2><ul id="warnings"></ul></section>
+    <section><h2>Not in email (unknown field)</h2><ul id="unknown"></ul></section>
+    <section><h2>Field names → blocks</h2>
+      <table class="ref">
+        <tr><td><code>Subject</code>, <code>Preheader</code></td><td>inbox line</td></tr>
+        <tr><td><code>campaignURL</code></td><td>logo/hero link</td></tr>
+        <tr><td><code>HeroTxt</code> + <code>HeroDesc</code></td><td>H1 block</td></tr>
+        <tr><td><code>heroImg</code></td><td>hero image</td></tr>
+        <tr><td><code>IntroTxt</code>, <code>Txt_n</code>, <code>H2body_n</code></td><td>paragraph</td></tr>
+        <tr><td><code>H2_n</code></td><td>subheading</td></tr>
+        <tr><td><code>campaignCTA</code></td><td>primary button → campaignURL</td></tr>
+        <tr><td><code>CTAnTxt</code> + <code>CTAnURL</code></td><td>white secondary button</td></tr>
+        <tr><td><code>Img_n</code> (+ <code>ImgURL_n</code>)</td><td>image</td></tr>
+        <tr><td><code>Prod_n</code> (product code) or <code>Products_n</code> (codes separated by comma/new line, one block)</td><td>product cards with placeholders</td></tr>
+        <tr><td><code>Prod_n_Img</code>, <code>_Name</code>, <code>_Price</code>, <code>_OldPrice</code>, <code>_URL</code></td><td>product cards, 3 per row</td></tr>
+      </table>
+    </section>
+  </aside>
+</main>
+
+<script>
+/* ===================== CONFIG ===================== */
+const CONFIG = {
+  languages: { ET: ["ET", "EE", "EST"], ENG: ["ENG", "EN"], LV: ["LV"], LT: ["LT"], FI: ["FI"] },
+  fieldHeader: "Field",
+  logoImg: "https://image.communication.stokker.com/lib/fe2c11737364047c701378/m/1/279600d8-1b0f-417f-adc4-c8fcbd8ef6bf.png",
+  subjectMax: 60, preheaderMax: 110
+};
+/* ================================================== */
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+
+/* ---------- Excel clipboard parsing ---------- */
+function parseTSV(text) {
+  const rows = []; let row = [], cell = "", i = 0, q = false;
+  text = text.replace(/\r\n?/g, "\n");
+  while (i < text.length) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i += 2; continue; } q = false; i++; continue; }
+      cell += c; i++; continue;
+    }
+    if (c === '"' && cell === "") { q = true; i++; continue; }
+    if (c === "\t") { row.push(cell); cell = ""; i++; continue; }
+    if (c === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; i++; continue; }
+    cell += c; i++;
+  }
+  if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+function parseHTMLTable(html) {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return [...doc.querySelectorAll("tr")].map(r => [...r.querySelectorAll("td,th")].map(td => {
+    td.querySelectorAll("br").forEach(b => b.replaceWith("\n"));
+    return td.textContent.replace(/ /g, " ");
+  }));
+}
+
+/* ---------- read rows by header NAME, keep Excel row order ---------- */
+function readRows(rows, wanted) {
+  const hi = rows.findIndex(r => r.some(c => c.trim().toLowerCase() === CONFIG.fieldHeader.toLowerCase()));
+  if (hi < 0) throw new Error(`No header row with a "${CONFIG.fieldHeader}" column found – copy the table including its header.`);
+  const head = rows[hi].map(c => c.trim().toUpperCase());
+  const fc = head.indexOf(CONFIG.fieldHeader.toUpperCase());
+  const cols = {};
+  for (const [l, al] of Object.entries(CONFIG.languages)) { const i = head.findIndex(h => al.includes(h)); if (i >= 0) cols[l] = i; }
+  const langs = Object.keys(cols);
+  if (!langs.length) throw new Error("No language column (ET, ENG, LV, LT, FI) found in the header row.");
+  const lang = langs.includes(wanted) ? wanted : langs.includes("ET") ? "ET" : langs[0];
+  const lc = cols[lang];
+  const list = [], seen = {}, dupes = [];
+  for (const r of rows.slice(hi + 1)) {
+    const name = (r[fc] || "").trim();
+    if (!name) continue;
+    const key = name.toLowerCase();
+    if (seen[key]) dupes.push(name);
+    seen[key] = true;
+    list.push({ name, key, value: (r[lc] || "").trim() });
+  }
+  return { list, dupes, langs, lang };
+}
+
+/* ---------- helpers ---------- */
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const isUrl = s => /^https?:\/\/[^\s"<>]+$/i.test(s);
+const br = s => esc(s.trim()).replace(/\n\s*\n+/g, "<br><br>").replace(/\n/g, "<br>");
+const FONT = "Inter, Arial, helvetica, sans-serif";
+
+/* ---------- Stokker template blocks (from the SFMC reference email) ---------- */
+const wrap = (pad, inner, bg = "transparent") =>
+  `<table cellpadding="0" cellspacing="0" width="100%" role="presentation" style="background-color:${bg};min-width:100%;"><tr><td style="padding:${pad};">${inner}</td></tr></table>\n`;
+
+const T = {
+  logo: (url) => wrap("0", `<table width="100%" cellspacing="0" cellpadding="0" role="presentation"><tr><td align="center" style="padding:0 !important;">${
+      link(url, `<img src="${CONFIG.logoImg}" alt="Stokker logo" width="600" style="display:block;padding:0;height:auto;width:100%;border:0;">`)}</td></tr></table>`),
+  h1: (title, desc) => wrap("20px 40px",
+      `<h1 style="color:#004b87;font-family:${FONT};font-size:21px;font-style:normal;text-align:center;margin:0;"><span style="color:#004b87;">${
+        title ? `<span style="text-transform:uppercase;font-weight:bold;"><b>${br(title)}</b></span>` : ""}${title && desc ? "<br>" : ""}${
+        desc ? `<span style="font-size:16px;font-weight:normal;">${br(desc)}</span>` : ""}</span></h1>`),
+  image: (src, url, alt) => wrap("0", `<table width="100%" cellspacing="0" cellpadding="0" role="presentation"><tr><td align="center" style="padding:0 !important;">${
+      link(url, `<img src="${esc(src)}" alt="${esc(alt || "")}" width="600" style="display:block;padding:0;height:auto;width:100%;border:0;">`)}</td></tr></table>`),
+  text: (txt, firstAfterHeading) => wrap(firstAfterHeading ? "0 40px" : "20px 40px 0", `<p style="line-height:21px;font-size:14px;margin:13px 0;">${br(txt)}</p>`),
+  h2: (txt) => wrap("20px 40px 0", `<h2 style="color:#004b87;font-family:${FONT};font-size:21px;font-style:normal;text-align:center;margin:0;"><span style="color:#004b87;font-weight:bold;"><b>${br(txt)}</b></span></h2>`),
+  button: (txt, url, outline) => wrap(outline ? "20px 20px 40px" : "20px",
+      `<table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:separate;margin:0 auto;"><tr>
+<td align="center" bgcolor="${outline ? "#FFFFFF" : "#0D3B86"}" style="background-color:${outline ? "#FFFFFF;border:1px solid #0D3B86" : "#0D3B86"};border-radius:6px;">
+<a href="${esc(url)}" target="_blank" style="display:inline-block;border-style:solid;border-color:${outline ? "#FFFFFF" : "#0D3B86"};border-width:12px 24px;font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:500;line-height:120%;color:${outline ? "#0D3B86" : "#f0f0f0"};text-decoration:none;text-transform:uppercase;border-radius:6px;">${esc(txt)}</a>
+</td></tr></table>`),
+  products: (items) => {
+    let rows = "";
+    for (let i = 0; i < items.length; i += 3) {
+      const chunk = items.slice(i, i + 3);
+      const pads = ["padding-right:6.67px;", "padding-left:3.33px;padding-right:3.33px;", "padding-left:6.67px;"];
+      rows += `<tr>${[0, 1, 2].map(k => {
+        const p = chunk[k];
+        if (!p) return `<td class="responsive-td" style="width:33%;${pads[k]}"></td>`;
+        const price = p.price ? (p.old
+          ? `<span style="font-size:12px;color:#555555;"><s>${esc(p.old)}</s></span>&nbsp;&nbsp;<span style="color:#b71c1c;"><b><span style="font-size:14px;padding-left:10px;">${esc(p.price)}</span></b></span>`
+          : `<span style="font-size:14px;color:${p.phPrice ? '#9aa4ad' : '#000000'};"><b>${esc(p.price)}</b></span>`) : "";
+        return `<td class="responsive-td" style="width:33%;${pads[k]}" valign="bottom">
+<table cellpadding="0" cellspacing="0" role="presentation" width="100%">
+${p.img ? `<tr><td align="center" style="padding-top:20px;padding-bottom:10px;">${link(p.url, `<img alt="${esc(p.name)}" src="${esc(p.img)}" onerror="this.onerror=null;this.src='${PH_IMG}'" width="165" style="display:block;height:auto;width:100%;border:0;">`)}</td></tr>` : ""}
+${p.name ? `<tr><td style="padding-bottom:10px;text-align:center;">${link(p.url, `<span style="font-size:14px;line-height:16px;${p.phName ? 'color:#9aa4ad;font-style:italic;' : ''}">${esc(p.name)}</span>`, "text-decoration:none;color:#000000;")}</td></tr>` : ""}
+${price ? `<tr><td style="padding-bottom:10px;text-align:center;">${link(p.url, price, "color:#000000;text-decoration:none;")}</td></tr>` : ""}
+</table></td>`;
+      }).join("")}</tr>`;
+    }
+    return wrap("0 40px", `<table cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">${rows}</table>`, "#FFFFFF");
+  }
+};
+// Stokker media pattern: https://media.stokker.com/prod/thumb/m/168/16800292-01%26SUN.jpg
+// Stokker short product URL /{lang}/p/{code} redirects to the full product page (tested on all 4 markets)
+const SHOP = { ET: "https://www.stokker.ee/et", ENG: "https://www.stokker.ee/en", LV: "https://www.stokker.lv/lv", LT: "https://www.stokker.lt/lt", FI: "https://www.stokker.fi/fi" };
+function productUrl(code, lang) { return `${SHOP[lang] || SHOP.ET}/p/${encodeURIComponent(code)}`; }
+function productImg(code) { return `https://media.stokker.com/prod/thumb/m/${code.slice(0, 3)}/${encodeURIComponent(code)}.jpg`; }
+const PH_IMG = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="330" height="330"><rect width="100%" height="100%" fill="#eef1f3"/><text x="50%" y="50%" font-family="Arial" font-size="22" fill="#9aa4ad" text-anchor="middle" dominant-baseline="middle">Product image</text></svg>');
+function link(url, inner, style = "") {
+  return isUrl(url || "") ? `<a href="${esc(url)}" target="_blank" style="${style}">${inner}</a>` : inner;
+}
+
+function page(subject, pre, body) {
+  return `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+<meta name="robots" content="noindex, nofollow"/><meta name="referrer" content="no-referrer"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<title>${esc(subject || "Email preview")}</title>
+<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');</style>
+<style type="text/css">
+body{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;margin:0 !important;}
+p{display:block;margin:13px 0;}
+table td{border-collapse:collapse;mso-table-lspace:0;mso-table-rspace:0}
+img{border:0;height:auto;line-height:100%;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic}
+@media only screen and (max-width:640px){ .container{width:100% !important;} }
+@media only screen and (max-width:480px){
+  .container{width:100% !important;}
+  img{max-width:100% !important;height:auto !important;}
+  .responsive-td{width:100% !important;display:block !important;padding:0 !important;}
+  body{padding:0 !important;font-size:14px !important;line-height:150% !important;}
+  h1{font-size:24px !important;line-height:normal !important;}
+  h2{font-size:20px !important;line-height:normal !important;}
+}
+</style></head>
+<body bgcolor="#F4F6F6" style="-webkit-text-size-adjust:none;background-color:#F4F6F6;font-family:${FONT};font-size:14px;color:#555456;padding:0;">
+<div style="display:none;font-size:1px;max-height:0;overflow:hidden;">${esc(pre)}&#8204;&nbsp;&#8204;&nbsp;&#8204;&nbsp;</div>
+<table width="100%" border="0" cellpadding="0" cellspacing="0" align="center"><tr><td align="center">
+<table cellspacing="0" cellpadding="0" border="0" width="600" class="container" align="center">
+<tr><td style="padding:10px;text-align:right;font-family:Arial,sans-serif;font-size:10px;"><a href="#" style="color:#787878;text-decoration:underline;">Veebiversiooni vaatamiseks klõpsa siia</a></td></tr>
+<tr><td><table style="background-color:#FFFFFF;font-size:14px;font-family:${FONT};line-height:150%;color:#555456;" cellspacing="0" cellpadding="0" bgcolor="#FFFFFF" width="100%"><tr><td align="center" valign="top">
+${body}
+</td></tr></table></td></tr>
+<tr><td align="center" valign="top">${FOOTER}</td></tr>
+</table></td></tr></table>
+</body></html>`;
+}
+
+const ICON = "https://image.communication.stokker.com/lib/fe2c11737364047c701378/m/1/";
+const FOOTER = `<table cellpadding="0" cellspacing="0" role="presentation" style="background-color:#004B87;min-width:100%;" width="100%"><tr><td style="padding:40px 40px 20px;">
+<table border="0" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;"><tr><td></td>${[
+  ["https://www.stokker.ee/contacts/shops", "3abb7a0b-6856-4f44-a3b0-4db3b44aa312.png", "Kauplused"],
+  ["https://www.stokker.ee/e-pood", "70400227-e598-4f46-b01d-4abdcb70b695.png", "E-pood"],
+  ["tel:+3726555511", "a1595dea-3de1-40ea-98eb-15733a144da8.png", "Telefon"],
+  ["mailto:klient@stokker.com", "cd4853c6-105b-4e55-8a10-58b1921e3462.png", "E-post"],
+  ["https://www.facebook.com/StokkerEesti", "1eb91da6-8f11-4986-a7a2-acb6d487e051.png", "Facebook"],
+  ["https://www.youtube.com/channel/UCK9It7Es3oCtJlsWkoTWfow", "f8d4f70b-22ee-428d-bab8-8504a5f633a5.png", "YouTube"]
+].map(([h, i, a]) => `<td align="center" width="56"><a href="${h}" target="_blank"><img alt="${a}" height="40" width="40" src="${ICON}${i}" style="display:block;border:0;margin:0 auto;"></a></td>`).join("")}<td></td></tr></table>
+<div style="text-align:center;padding:20px 0;font-family:Calibri,'Segoe UI',Arial,sans-serif;font-size:15px;color:#ffffff;">STOKKER AS</div></td></tr></table>
+<table cellpadding="0" cellspacing="0" role="presentation" style="background-color:#F4F6F6;min-width:100%;" width="100%"><tr><td style="padding:15px 0;text-align:center;font-family:Calibri,'Segoe UI',Arial,sans-serif;font-size:11px;color:#707372;">
+Kui sa ei soovi rohkem uudiskirju saada, siis klõpsa <b><a href="#" style="color:#808080;text-decoration:underline;">siia</a>.</b></td></tr></table>`;
+
+/* ---------- build: walk Excel rows in order, field name decides block type ---------- */
+function build(data) {
+  const warn = [], unknown = [];
+  const val = {}; for (const r of data.list) val[r.key] = r.value;   // lookup by name (last wins)
+  const get = n => val[n.toLowerCase()] || "";
+  const done = new Set();                                            // multi-field blocks render once
+  const campUrl = get("campaignURL");
+  let body = T.logo(campUrl), lastWasHeading = false;
+  let prodBuffer = [];
+
+  // prodBuffer items: {n} (Prod_n_* fields) or {code} (from a code list)
+  const flushProducts = () => {
+    if (!prodBuffer.length) return;
+    const items = prodBuffer.map(({ n, code }) => {
+      const p = n != null
+        ? { label: `Prod_${n}`, code: get(`Prod_${n}_Code`) || get(`Prod_${n}`), img: get(`Prod_${n}_Img`), name: get(`Prod_${n}_Name`),
+            price: get(`Prod_${n}_Price`), old: get(`Prod_${n}_OldPrice`), url: get(`Prod_${n}_URL`) }
+        : { label: code, code, img: "", name: "", price: "", old: "", url: "" };
+      if (p.code && !p.img) { p.img = productImg(p.code); p.autoImg = true; }
+      if (p.code && !p.url) p.url = productUrl(p.code, data.lang);
+      if (p.code && !p.name) { p.name = `Product name · ${p.code}`; p.ph = true; p.phName = true; }
+      if (p.code && !p.price) { p.price = "0,00 €"; p.ph = true; p.phPrice = true; }
+      return p;
+    }).filter(p => p.img || p.name || p.price);
+    let placeholders = 0;
+    for (const p of items) {
+      if (p.ph || p.autoImg) placeholders++;
+      if (p.url && !isUrl(p.url)) warn.push(["e", `${p.label}: URL is not a valid link.`]);
+      if (p.img && !isUrl(p.img)) warn.push(["e", `${p.label}: image URL is not valid.`]);
+      if (!p.code && !p.price) warn.push(["w", `${p.label}: price missing.`]);
+    }
+    if (placeholders) warn.push(["i", `${placeholders} product card(s) use placeholders (name/price come from SFMC; image and link from the product code).`]);
+    if (items.length) body += T.products(items);
+    prodBuffer = [];
+  };
+
+  const button = (txt, url, label, outline) => {
+    if (!txt && !url) return;
+    if (!txt) { warn.push(["w", `${label}: URL exists but button text is empty – button hidden.`]); return; }
+    if (!url) { warn.push(["e", `${label}: “${txt}” has no URL – button hidden.`]); return; }
+    if (!isUrl(url)) { warn.push(["e", `${label}: URL is not a valid http(s) link.`]); return; }
+    body += T.button(txt, url, outline);
+  };
+
+  for (const r of data.list) {
+    const k = r.key; let m;
+    const isProd = /^prod_(\d+)(_|$)/i.test(r.name);
+    if (!isProd) flushProducts();
+    if (done.has(k)) continue;
+    let heading = false;
+
+    if (["subject", "preheader", "campaignurl"].includes(k)) { /* meta, not a block */ }
+    else if (k === "herotxt" || k === "herodesc") {
+      done.add("herotxt"); done.add("herodesc");
+      const t = get("HeroTxt"), d = get("HeroDesc");
+      if (t || d) { body += T.h1(t, d); heading = true; }
+    }
+    else if (k === "heroimg") {
+      if (r.value) { if (isUrl(r.value)) body += T.image(r.value, campUrl, get("HeroTxt")); else warn.push(["e", "heroImg is not a valid image URL."]); }
+    }
+    else if (k === "introtxt" || /^txt_\d+$/i.test(r.name) || /^h2body_\d+$/i.test(r.name)) {
+      if (r.value) body += T.text(r.value, lastWasHeading);
+    }
+    else if (/^h2_\d+$/i.test(r.name)) { if (r.value) { body += T.h2(r.value); heading = true; } }
+    else if (k === "campaigncta") { button(r.value, campUrl, "campaignCTA", false); }
+    else if ((m = r.name.match(/^cta(\d+)(txt|url|style)$/i))) {
+      const n = m[1]; ["txt", "url", "style"].forEach(s => done.add(`cta${n}${s}`));
+      button(get(`CTA${n}Txt`), get(`CTA${n}URL`), `CTA${n}`, true);   // all CTAn = white secondary
+    }
+    else if ((m = r.name.match(/^img(?:url)?_(\d+)$/i))) {
+      const n = m[1]; done.add(`img_${n}`); done.add(`imgurl_${n}`);
+      const src = get(`Img_${n}`), url = get(`ImgURL_${n}`);
+      if (src) { if (isUrl(src)) body += T.image(src, url, ""); else warn.push(["e", `Img_${n} is not a valid image URL.`]); }
+    }
+    else if (isProd) {
+      const n = r.name.match(/^prod_(\d+)/i)[1];
+      done.add(`prod_${n}`); ["code", "img", "name", "price", "oldprice", "url"].forEach(s => done.add(`prod_${n}_${s}`));
+      prodBuffer.push({ n });
+    }
+    else if (/^(products|productcodes|prodcodes|tooted|tootekoodid)(_\d+)?$/i.test(r.name)) {
+      r.value.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean).forEach(code => prodBuffer.push({ code }));
+      if (r.value) flushProducts();
+    }
+    else if (r.value) unknown.push(r.name);
+
+    if (r.value || heading) lastWasHeading = heading;
+  }
+  flushProducts();
+
+  // general checks
+  const subject = get("Subject"), pre = get("Preheader");
+  if (!subject) warn.unshift(["e", "Subject is missing."]);
+  if (!pre) warn.unshift(["w", "Preheader is missing."]);
+  if (!get("heroImg")) warn.push(["w", "heroImg is missing."]);
+  if (campUrl && !isUrl(campUrl)) warn.push(["e", "campaignURL is not a valid link."]);
+  if (subject.length > CONFIG.subjectMax) warn.push(["w", `Subject is ${subject.length} characters (over ${CONFIG.subjectMax} may be cut off on mobile).`]);
+  if (pre.length > CONFIG.preheaderMax) warn.push(["w", `Preheader is ${pre.length} characters.`]);
+  if (data.dupes.length) warn.push(["e", `Duplicate field names (last one wins): ${data.dupes.join(", ")}`]);
+  for (const r of data.list) if (/%%[\[=]|%%\w+%%/.test(r.value)) warn.push(["w", `${r.name} contains AMPscript (%%…%%) – shown as raw text.`]);
+
+  return { html: page(subject, pre, body), subject, pre, warn, unknown };
+}
+
+/* ---------- UI ---------- */
+const $ = id => document.getElementById(id);
+let current = "", lastRows = null, lang = null;
+function setStatus(t, cls) { $("status").textContent = t; $("status").className = cls || ""; }
+
+function load(rows, source) {
+  try {
+    const data = readRows(rows, lang);
+    lang = data.lang; lastRows = rows;
+    $("langs").innerHTML = data.langs.length > 1 ? data.langs.map(l => `<button class="${l === lang ? "on" : ""}" data-l="${l}">${l}</button>`).join("") : `<b style="padding:0 6px">${lang}</b>`;
+    $("langs").querySelectorAll("button").forEach(b => b.onclick = () => { lang = b.dataset.l; load(lastRows, "language switched"); });
+    const out = build(data);
+    current = out.html;
+    $("empty").classList.add("hidden"); $("previewCol").classList.remove("hidden"); $("side").classList.remove("hidden");
+    ["btnOpen", "btnDownload", "btnCopy", "btnMobile", "btnShare"].forEach(id => $(id).disabled = false);
+    $("subj").textContent = out.subject || "(no subject)";
+    $("pre").textContent = out.pre || "(no preheader)";
+    $("frame").srcdoc = out.html;
+    $("warnings").innerHTML = out.warn.length ? out.warn.map(([c, t]) => `<li class="${c}">${esc(t)}</li>`).join("") : `<li class="ok">No problems found.</li>`;
+    $("unknown").innerHTML = out.unknown.length ? out.unknown.map(n => `<li>${esc(n)}</li>`).join("") : "<li>–</li>";
+    setStatus(`${lang} · ${data.list.length} fields · ${source} ${new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`);
+    return true;
+  } catch (e) {
+    setStatus(e.message, "e");
+    // don't leave an old preview on screen after a failed paste
+    $("empty").classList.remove("hidden"); $("previewCol").classList.add("hidden"); $("side").classList.add("hidden");
+    ["btnOpen", "btnDownload", "btnCopy", "btnMobile", "btnShare"].forEach(id => $(id).disabled = true);
+    $("langs").innerHTML = "";
+    return false;
+  }
+}
+function handle(text, html, source) {
+  let ok = false;
+  if (text) { ok = load(parseTSV(text), source); if (ok) store.set("stokkerPreview.raw", text); }
+  if (!ok && html) ok = load(parseHTMLTable(html), source);
+}
+
+document.addEventListener("paste", e => {
+  const cd = e.clipboardData; if (!cd) return;
+  e.preventDefault();
+  handle(cd.getData("text/plain"), cd.getData("text/html"), "pasted");
+});
+$("btnPaste").onclick = async () => {
+  try {
+    let text = "", html = "";
+    if (navigator.clipboard.read) {
+      for (const item of await navigator.clipboard.read()) {
+        if (item.types.includes("text/plain")) text = await (await item.getType("text/plain")).text();
+        if (item.types.includes("text/html")) html = await (await item.getType("text/html")).text();
+      }
+    } else text = await navigator.clipboard.readText();
+    handle(text, html, "pasted");
+  } catch (e) { setStatus("The browser blocked clipboard access – press Ctrl+V instead.", "w"); }
+};
+$("btnOpen").onclick = () => {
+  const w = window.open(URL.createObjectURL(new Blob([current], { type: "text/html" })), "_blank");
+  if (!w) setStatus("Pop-up blocked – allow pop-ups or use Download .html.", "w");
+};
+$("btnDownload").onclick = () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([current], { type: "text/html" }));
+  a.download = `email-preview_${lang}.html`; a.click();
+};
+$("btnCopy").onclick = async () => {
+  try { await navigator.clipboard.writeText(current); setStatus("HTML copied."); }
+  catch (e) { setStatus("Copy blocked – use Download .html.", "w"); }
+};
+$("btnMobile").onclick = () => { $("frame").classList.toggle("mobile"); $("btnMobile").classList.toggle("on"); };
+
+/* ---------- share links: content lives in the URL #fragment (never sent to the server) ---------- */
+const SHARE_TTL_H = 24;
+const b64u = { enc: b => btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""),
+               dec: s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0)) };
+async function pipe(bytes, stream) { return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer()); }
+
+function shareRows(rows) {
+  // keep only Field + language columns (drops AMPScript and any other columns)
+  const hi = rows.findIndex(r => r.some(c => c.trim().toLowerCase() === CONFIG.fieldHeader.toLowerCase()));
+  const head = rows[hi].map(c => c.trim().toUpperCase());
+  const keep = head.map((h, i) => (h === CONFIG.fieldHeader.toUpperCase() || Object.values(CONFIG.languages).some(a => a.includes(h))) ? i : -1).filter(i => i >= 0);
+  const fc = head.indexOf(CONFIG.fieldHeader.toUpperCase());
+  return [rows[hi], ...rows.slice(hi + 1).filter(r => (r[fc] || "").trim())].map(r => keep.map(i => r[i] || ""));
+}
+$("btnShare").onclick = async () => {
+  if (location.protocol === "file:") { setStatus("Share links only work from the hosted (GitHub) version of this page.", "w"); return; }
+  try {
+    const payload = JSON.stringify({ v: 1, t: Date.now(), l: lang, r: shareRows(lastRows) });
+    const z = await pipe(new TextEncoder().encode(payload), new CompressionStream("deflate"));
+    const url = `${location.origin}${location.pathname}#d=${b64u.enc(z)}`;
+    await navigator.clipboard.writeText(url);
+    setStatus(`Share link copied (valid ${SHARE_TTL_H} h, ${url.length} characters).`);
+  } catch (e) { setStatus("Could not create the share link: " + e.message, "e"); }
+};
+async function openFromHash() {
+  const m = location.hash.match(/[#&]d=([\w-]+)/);
+  if (!m) return false;
+  try {
+    const data = JSON.parse(new TextDecoder().decode(await pipe(b64u.dec(m[1]), new DecompressionStream("deflate"))));
+    const ageH = (Date.now() - data.t) / 36e5;
+    if (ageH > SHARE_TTL_H) { setStatus(`This preview link has expired (created ${Math.floor(ageH)} h ago). Ask for a new link.`, "e"); return true; }
+    lang = data.l;
+    load(data.r, `shared link, created ${new Date(data.t).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })} ·`);
+  } catch (e) { setStatus("This preview link is broken or incomplete.", "e"); }
+  return true;
+}
+
+(async () => {
+  if (await openFromHash()) return;           // a shared link wins over the locally saved paste
+  const last = store.get("stokkerPreview.raw");
+  if (last) handle(last, "", "restored from last paste");
+})();
+window.addEventListener("hashchange", openFromHash);
+</script>
+</body>
+</html>
