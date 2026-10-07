@@ -122,13 +122,30 @@ function parseTSV(text) {
 }
 function parseHTMLTable(html) {
   const doc = new DOMParser().parseFromString(html, "text/html");
-  return [...doc.querySelectorAll("tr")].map(r => [...r.querySelectorAll("td,th")].map(td => {
-    td.querySelectorAll("br").forEach(b => b.replaceWith("\n"));
-    return td.textContent.replace(/ /g, " ");
-  }));
+  return [...doc.querySelectorAll("tr")].map(r => {
+    const out = [];
+    for (const td of r.querySelectorAll("td,th")) {
+      const brs = td.querySelectorAll("br");
+      brs.forEach(b => b.replaceWith("\u2028"));
+      let t = td.textContent.replace(/\u00a0/g, " ");
+      // Excel desktop wraps long text in the HTML source – collapse that, keep real <br> breaks
+      t = brs.length ? t.replace(/\s+/g, m => m.includes("\u2028") ? m : " ") : t;
+      out.push(t.replace(/ ?\u2028 ?/g, "\n"));
+      for (let k = 1; k < (+td.getAttribute("colspan") || 1); k++) out.push("");   // merged cells
+    }
+    return out;
+  });
 }
-
-/* ---------- read rows by header NAME, keep Excel row order ---------- */
+// Which parse of the clipboard is trustworthy? Real field names look like identifiers (Subject, H2_1, CTA1Txt…).
+function parseQuality(rows) {
+  const hi = rows.findIndex(r => r.some(c => c.trim().toLowerCase() === CONFIG.fieldHeader.toLowerCase()));
+  if (hi < 0) return -1e9;
+  const fc = rows[hi].findIndex(c => c.trim().toLowerCase() === CONFIG.fieldHeader.toLowerCase());
+  let good = 0, bad = 0;
+  for (const r of rows.slice(hi + 1)) { const n = (r[fc] || "").trim(); if (!n) continue; FIELD_RE.test(n) ? good++ : bad++; }
+  return good - 3 * bad;
+}
+const FIELD_RE = /^[A-Za-z][A-Za-z0-9_-]{0,40}$/;
 function readRows(rows, wanted) {
   const hi = rows.findIndex(r => r.some(c => c.trim().toLowerCase() === CONFIG.fieldHeader.toLowerCase()));
   if (hi < 0) throw new Error(`No header row with a "${CONFIG.fieldHeader}" column found – copy the table including its header.`);
@@ -141,15 +158,17 @@ function readRows(rows, wanted) {
   const lang = langs.includes(wanted) ? wanted : langs.includes("ET") ? "ET" : langs[0];
   const lc = cols[lang];
   const list = [], seen = {}, dupes = [];
+  let ignored = 0;
   for (const r of rows.slice(hi + 1)) {
     const name = (r[fc] || "").trim();
     if (!name) continue;
-    const key = name.toLowerCase();
-    if (seen[key]) dupes.push(name);
-    seen[key] = true;
-    list.push({ name, key, value: (r[lc] || "").trim() });
+    if (!FIELD_RE.test(name)) { ignored++; continue; }          // notes, AMPscript, other tables on the sheet
+    const key = name.toLowerCase(), value = (r[lc] || "").trim();
+    if (key in seen) { if (seen[key] !== value) dupes.push(name); continue; }   // first one wins
+    seen[key] = value;
+    list.push({ name, key, value });
   }
-  return { list, dupes, langs, lang };
+  return { list, dupes, langs, lang, ignored };
 }
 
 /* ---------- helpers ---------- */
@@ -357,7 +376,8 @@ function build(data) {
   if (campUrl && !isUrl(campUrl)) warn.push(["e", "campaignURL is not a valid link."]);
   if (subject.length > CONFIG.subjectMax) warn.push(["w", `Subject is ${subject.length} characters (over ${CONFIG.subjectMax} may be cut off on mobile).`]);
   if (pre.length > CONFIG.preheaderMax) warn.push(["w", `Preheader is ${pre.length} characters.`]);
-  if (data.dupes.length) warn.push(["e", `Duplicate field names (last one wins): ${data.dupes.join(", ")}`]);
+  if (data.ignored) warn.push(["i", `${data.ignored} row(s) ignored – the Field cell is not a field name (notes, AMPscript etc.).`]);
+  if (data.dupes.length) warn.push(["e", `Field appears twice with different text – the first one is used: ${data.dupes.join(", ")}`]);
   for (const r of data.list) if (/%%[\[=]|%%\w+%%/.test(r.value)) warn.push(["w", `${r.name} contains AMPscript (%%…%%) – shown as raw text.`]);
 
   return { html: page(subject, pre, body), subject, pre, warn, unknown };
@@ -372,6 +392,7 @@ function load(rows, source) {
   try {
     const data = readRows(rows, lang);
     lang = data.lang; lastRows = rows;
+    if (!/restored/.test(source)) store.set("stokkerPreview.rows", JSON.stringify(rows));
     $("langs").innerHTML = data.langs.length > 1 ? data.langs.map(l => `<button class="${l === lang ? "on" : ""}" data-l="${l}">${l}</button>`).join("") : `<b style="padding:0 6px">${lang}</b>`;
     $("langs").querySelectorAll("button").forEach(b => b.onclick = () => { lang = b.dataset.l; load(lastRows, "language switched"); });
     const out = build(data);
@@ -396,11 +417,16 @@ function load(rows, source) {
 }
 function handle(text, html, source) {
   let ok = false;
+  // pick the cleaner parse: TSV normally, the HTML table when the TSV got broken up (e.g. big AMPscript cells)
+  if (text && html) {
+    const t = parseTSV(text), h = parseHTMLTable(html);
+    if (parseQuality(h) > parseQuality(t)) { text = ""; html = { rows: h }; }
+  }
   // a NEW paste: forget the previous language choice and drop any shared-link #fragment
   const prevLang = lang; lang = null;
   if (location.hash) history.replaceState(null, "", location.pathname + location.search);
-  if (text) { ok = load(parseTSV(text), source); if (ok) store.set("stokkerPreview.raw", text); }
-  if (!ok && html) ok = load(parseHTMLTable(html), source);
+  if (text) ok = load(parseTSV(text), source);
+  if (!ok && html) ok = load(html.rows || parseHTMLTable(html), source);
   if (!ok) lang = prevLang;
   if (ok) flash();
   else if (!text && !html) setStatus("Clipboard is empty – copy the table in Excel first.", "w");
@@ -486,8 +512,7 @@ async function openFromHash() {
 
 (async () => {
   if (await openFromHash()) return;           // a shared link wins over the locally saved paste
-  const last = store.get("stokkerPreview.raw");
-  if (last) handle(last, "", "restored from last paste");
+  try { const saved = JSON.parse(store.get("stokkerPreview.rows") || "null"); if (saved) load(saved, "restored from last paste"); } catch (e) {}
 })();
 window.addEventListener("hashchange", openFromHash);
 </script>
